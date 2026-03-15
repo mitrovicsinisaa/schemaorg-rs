@@ -1,0 +1,68 @@
+[package]
+name = "schemaorg-rs"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+
+description = "Parse and validate Schema.org structured data (JSON-LD, Microdata, RDFa) against the official vocabulary and Google Rich Results profiles."
+
+authors = ["Your Name <your@email.com>"]
+license = "MIT"
+repository = "https://github.com/your-username/schemaorg-rs"
+homepage = "https://github.com/your-username/schemaorg-rs"
+documentation = "https://docs.rs/schemaorg-rs"
+readme = "README.md"
+
+keywords = ["schema-org", "json-ld", "structured-data", "seo", "validation"]
+categories = ["parsing", "web-programming", "encoding"]
+
+exclude = [
+    "tests/fixtures/*",
+    ".github/*",
+]
+
+[lib]
+name = "schemaorg_rs"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "schemaorg-validate"
+path = "src/bin/validate.rs"
+required-features = ["cli"]
+
+[features]
+default = ["extraction", "validation"]
+extraction = []
+validation = ["extraction"]
+profiles = ["validation"]
+wasm = ["wasm-bindgen"]
+cli = ["profiles", "dep:clap"]
+full = ["extraction", "validation", "profiles"]
+
+[dependencies]
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# HTML parsing
+scraper = "0.20"
+
+# JSON-LD
+json-ld = { version = "0.21", optional = false }
+
+# WASM support (optional)
+wasm-bindgen = { version = "0.2", optional = true }
+
+# CLI (optional)
+clap = { version = "4", features = ["derive"], optional = true }
+
+[dev-dependencies]
+pretty_assertions = "1"
+
+[build-dependencies]
+# for schema.org codegen (Milestone 2)
+# serde_json = "1"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
