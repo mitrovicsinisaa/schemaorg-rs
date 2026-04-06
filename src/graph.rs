@@ -65,6 +65,8 @@ pub fn extract_all(html: &str) -> Result<StructuredDataGraph, ExtractionError> {
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::assert_eq;
+
     use super::*;
     use crate::types::{SchemaValue, SourceFormat};
 

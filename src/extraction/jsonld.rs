@@ -268,16 +268,30 @@ fn classify_string_value(s: &str) -> SchemaValue {
 }
 
 /// Check if a string matches an ISO 8601 date/datetime pattern (`YYYY-MM-DD...`).
+///
+/// Validates the structural pattern and basic range checks (month 01-12,
+/// day 01-31). Full date validation (leap years, etc.) is deferred to M2.
 fn is_iso_datetime(s: &str) -> bool {
     let bytes = s.as_bytes();
     if bytes.len() < 10 {
         return false;
     }
-    bytes[0..4].iter().all(u8::is_ascii_digit)
+
+    let valid_pattern = bytes[0..4].iter().all(u8::is_ascii_digit)
         && bytes[4] == b'-'
         && bytes[5..7].iter().all(u8::is_ascii_digit)
         && bytes[7] == b'-'
-        && bytes[8..10].iter().all(u8::is_ascii_digit)
+        && bytes[8..10].iter().all(u8::is_ascii_digit);
+
+    if !valid_pattern {
+        return false;
+    }
+
+    // Range checks: month 01-12, day 01-31
+    let month = (bytes[5] - b'0') * 10 + (bytes[6] - b'0');
+    let day = (bytes[8] - b'0') * 10 + (bytes[9] - b'0');
+
+    (1..=12).contains(&month) && (1..=31).contains(&day)
 }
 
 // ---------------------------------------------------------------------------
@@ -329,6 +343,7 @@ fn resolve_node_refs(
                                 source_location: inner.source_location.clone(),
                                 code: WarningCode::UnresolvableReference,
                             });
+                            continue;
                         }
                     }
                 }
@@ -398,6 +413,8 @@ fn find_script_byte_offsets(html: &str) -> Vec<usize> {
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::assert_eq;
+
     use super::*;
 
     #[test]
@@ -686,5 +703,204 @@ mod tests {
             out.nodes[0].properties["image"][0],
             SchemaValue::Url("https://example.com/img1.jpg".into())
         );
+    }
+
+    #[test]
+    fn null_values_are_skipped() {
+        let html = r#"<html><head><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Widget",
+  "description": null
+}</script></head></html>"#;
+
+        let out = JsonLdExtractor.extract(html).expect("extraction failed");
+        assert_eq!(out.nodes.len(), 1);
+        // null values should be skipped entirely
+        assert!(!out.nodes[0].properties.contains_key("description"));
+    }
+
+    #[test]
+    fn integer_numbers() {
+        let html = r#"<html><head><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Widget",
+  "ratingCount": 42
+}</script></head></html>"#;
+
+        let out = JsonLdExtractor.extract(html).expect("extraction failed");
+        assert_eq!(
+            out.nodes[0].properties["ratingCount"],
+            vec![SchemaValue::Number(42.0)]
+        );
+    }
+
+    #[test]
+    fn graph_context_inherited_by_children() {
+        let html = r#"<html><head><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@graph": [
+    {"@type": "Product", "name": "A"},
+    {"@type": "https://schema.org/Article", "name": "B"}
+  ]
+}</script></head></html>"#;
+
+        let out = JsonLdExtractor.extract(html).expect("extraction failed");
+        assert_eq!(out.nodes.len(), 2);
+        // Children should inherit @context from @graph wrapper
+        assert_eq!(out.nodes[0].types, vec!["Product"]);
+        // Full URI types should still be stripped
+        assert_eq!(out.nodes[1].types, vec!["Article"]);
+    }
+
+    #[test]
+    fn duplicate_id_warns() {
+        let html = r##"<html><head><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@graph": [
+    {"@id": "#thing", "@type": "Product", "name": "First"},
+    {"@id": "#thing", "@type": "Article", "name": "Second"}
+  ]
+}</script></head></html>"##;
+
+        let out = JsonLdExtractor.extract(html).expect("extraction failed");
+        assert!(out
+            .warnings
+            .iter()
+            .any(|w| w.code == WarningCode::DuplicateId));
+    }
+
+    #[test]
+    fn deeply_nested_objects() {
+        let html = r#"<html><head><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Widget",
+  "offers": {
+    "@type": "Offer",
+    "seller": {
+      "@type": "Organization",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "US"
+      }
+    }
+  }
+}</script></head></html>"#;
+
+        let out = JsonLdExtractor.extract(html).expect("extraction failed");
+        assert_eq!(out.nodes.len(), 1);
+        // Drill down: Product -> offers -> seller -> address -> addressCountry
+        let offers = &out.nodes[0].properties["offers"];
+        if let SchemaValue::Node(offer) = &offers[0] {
+            let seller = &offer.properties["seller"];
+            if let SchemaValue::Node(org) = &seller[0] {
+                let address = &org.properties["address"];
+                if let SchemaValue::Node(addr) = &address[0] {
+                    assert_eq!(addr.types, vec!["PostalAddress"]);
+                    assert_eq!(
+                        addr.properties["addressCountry"],
+                        vec![SchemaValue::Text("US".into())]
+                    );
+                } else {
+                    panic!("Expected PostalAddress node");
+                }
+            } else {
+                panic!("Expected Organization node");
+            }
+        } else {
+            panic!("Expected Offer node");
+        }
+    }
+
+    #[test]
+    fn whitespace_only_script() {
+        let html = r#"<html><head><script type="application/ld+json">   
+  
+  </script></head></html>"#;
+
+        let out = JsonLdExtractor.extract(html).expect("extraction failed");
+        assert!(out.nodes.is_empty());
+        assert_eq!(out.warnings.len(), 1);
+        assert_eq!(out.warnings[0].code, WarningCode::MalformedJsonLd);
+    }
+
+    #[test]
+    fn source_location_is_set() {
+        let html = "<html><head>\n<script type=\"application/ld+json\">\n{\"@type\":\"Product\",\"name\":\"A\"}\n</script>\n</head></html>";
+
+        let out = JsonLdExtractor.extract(html).expect("extraction failed");
+        assert_eq!(out.nodes.len(), 1);
+        let loc = out.nodes[0]
+            .source_location
+            .as_ref()
+            .expect("missing source location");
+        // The <script> tag starts on line 2
+        assert_eq!(loc.line, 2);
+    }
+
+    #[test]
+    fn iso_datetime_rejects_invalid_ranges() {
+        // Invalid month
+        assert!(!is_iso_datetime("2024-13-15"));
+        assert!(!is_iso_datetime("2024-00-15"));
+        // Invalid day
+        assert!(!is_iso_datetime("2024-01-00"));
+        assert!(!is_iso_datetime("2024-01-32"));
+        // Completely bogus
+        assert!(!is_iso_datetime("1234-56-78"));
+        assert!(!is_iso_datetime("0000-00-00"));
+        // Valid edge cases
+        assert!(is_iso_datetime("2024-01-01"));
+        assert!(is_iso_datetime("2024-12-31"));
+    }
+
+    #[test]
+    fn multiple_types_with_uri_prefix() {
+        let html = r#"<html><head><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": ["https://schema.org/Product", "http://schema.org/IndividualProduct"],
+  "name": "Widget"
+}</script></head></html>"#;
+
+        let out = JsonLdExtractor.extract(html).expect("extraction failed");
+        assert_eq!(out.nodes[0].types, vec!["Product", "IndividualProduct"]);
+    }
+
+    #[test]
+    fn schema_node_id_accessor() {
+        let html = r##"<html><head><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@id": "#product1",
+  "@type": "Product",
+  "name": "Widget"
+}</script></head></html>"##;
+
+        let out = JsonLdExtractor.extract(html).expect("extraction failed");
+        assert_eq!(out.nodes[0].id(), Some("#product1"));
+    }
+
+    #[test]
+    fn no_structured_data() {
+        let html = r#"<html><head><title>No structured data</title></head>
+<body><p>Hello world</p></body></html>"#;
+
+        let out = JsonLdExtractor.extract(html).expect("extraction failed");
+        assert!(out.nodes.is_empty());
+        assert!(out.warnings.is_empty());
+    }
+
+    #[test]
+    fn json_ld_with_trailing_comma() {
+        // Many real-world sites have trailing commas in JSON-LD (invalid JSON)
+        let html = r#"<html><head><script type="application/ld+json">{
+  "@type": "Product",
+  "name": "Widget",
+}</script></head></html>"#;
+
+        let out = JsonLdExtractor.extract(html).expect("extraction failed");
+        assert!(out.nodes.is_empty());
+        assert_eq!(out.warnings[0].code, WarningCode::MalformedJsonLd);
     }
 }
