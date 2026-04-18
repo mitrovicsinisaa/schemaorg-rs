@@ -5,9 +5,9 @@
 //!
 //! ## Supported Formats
 //!
-//! - **JSON-LD** — `<script type="application/ld+json">` (fully implemented)
-//! - **Microdata** — `itemscope`/`itemprop` attributes (Phase 1b)
-//! - **RDFa Lite** — `vocab`/`typeof`/`property` attributes (Phase 1b)
+//! - **JSON-LD** -- `<script type="application/ld+json">`
+//! - **Microdata** -- `itemscope`/`itemprop` attributes
+//! - **`RDFa` Lite** -- `vocab`/`typeof`/`property` attributes
 //!
 //! ## Quick Start
 //!
@@ -29,22 +29,35 @@
 //! # }
 //! ```
 
+// Lints
+#![warn(missing_docs)]
+#![warn(unreachable_pub)]
+#![warn(clippy::pedantic)]
+// Pedantic exceptions: these fire on every public type/method and add noise
+// without meaningful benefit for a data-extraction library.
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::must_use_candidate)]
+
+/* Core modules (always available) */
 pub mod error;
 pub mod types;
 
+/* Extraction engine (feature-gated) */
 #[cfg(feature = "extraction")]
 pub mod extraction;
 #[cfg(feature = "extraction")]
 pub mod graph;
 
-// Public re-exports — always available
+/* Public re-exports: always available */
 pub use error::{ExtractionError, ExtractionWarning, WarningCode};
 pub use types::{SchemaNode, SchemaValue, SourceFormat, SourceLocation};
 
-// Public re-exports — extraction feature
+/* Public re-exports: extraction feature */
 #[cfg(feature = "extraction")]
 pub use extraction::{
     ExtractionOutput, Extractor, JsonLdExtractor, MicrodataExtractor, RdfaLiteExtractor,
 };
 #[cfg(feature = "extraction")]
 pub use graph::{extract_all, StructuredDataGraph};
+#[cfg(feature = "extraction")]
+pub use scraper::Html;

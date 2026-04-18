@@ -26,7 +26,7 @@ name = "schemaorg_rs"
 
 [features]
 default = ["extraction"]
-extraction = []
+extraction = ["dep:scraper", "dep:ego-tree", "dep:serde_json"]
 validation = ["extraction"]
 profiles = ["validation"]
 wasm = ["dep:wasm-bindgen"]
@@ -36,10 +36,13 @@ full = ["extraction", "validation", "profiles"]
 [dependencies]
 thiserror = "1"
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
 
-# HTML parsing
-scraper = "0.20"
+# HTML parsing (extraction feature only)
+scraper = { version = "0.20", default-features = false, optional = true }
+ego-tree = { version = "0.6", optional = true }
+
+# JSON parsing (extraction feature only)
+serde_json = { version = "1", optional = true }
 
 # Insertion-ordered property maps
 indexmap = { version = "2", features = ["serde"] }
