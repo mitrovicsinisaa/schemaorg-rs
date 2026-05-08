@@ -10,12 +10,12 @@
 //!
 //! ```text
 //! StructuredDataGraph
-//!   └── Vec<SchemaNode>
-//!         ├── types: ["Product"]
-//!         ├── properties: { "name" -> [Text("Widget")],
-//!         │                  "offers" -> [Node(Offer { ... })] }
-//!         ├── source_format: JsonLd
-//!         └── source_location: Some({ line: 3, column: 1, byte_offset: 42 })
+//!   +---- Vec<SchemaNode>
+//!         +---- types: ["Product"]
+//!         +---- properties: { "name" -> [Text("Widget")],
+//!         |                  "offers" -> [Node(Offer { ... })] }
+//!         +---- source_format: JsonLd
+//!         +---- source_location: Some({ line: 3, column: 1, byte_offset: 42 })
 //! ```
 //!
 //! # Examples
@@ -139,13 +139,13 @@ pub enum SchemaValue {
 /// use indexmap::IndexMap;
 ///
 /// let node = SchemaNode {
-///     types: vec!["Product".into()],
-///     properties: IndexMap::from([(
-///         "name".into(),
-///         vec![SchemaValue::Text("Widget".into())],
-///     )]),
-///     source_format: SourceFormat::JsonLd,
-///     source_location: None,
+/// types: vec!["Product".into()],
+/// properties: IndexMap::from([(
+/// "name".into(),
+/// vec![SchemaValue::Text("Widget".into())],
+/// )]),
+/// source_format: SourceFormat::JsonLd,
+/// source_location: None,
 /// };
 ///
 /// assert_eq!(node.id(), None);
@@ -172,13 +172,13 @@ impl SchemaNode {
     /// use indexmap::IndexMap;
     ///
     /// let node = SchemaNode {
-    ///     types: vec!["Product".into()],
-    ///     properties: IndexMap::from([(
-    ///         "@id".into(),
-    ///         vec![SchemaValue::Text("#product1".into())],
-    ///     )]),
-    ///     source_format: SourceFormat::JsonLd,
-    ///     source_location: None,
+    /// types: vec!["Product".into()],
+    /// properties: IndexMap::from([(
+    /// "@id".into(),
+    /// vec![SchemaValue::Text("#product1".into())],
+    /// )]),
+    /// source_format: SourceFormat::JsonLd,
+    /// source_location: None,
     /// };
     ///
     /// assert_eq!(node.id(), Some("#product1"));

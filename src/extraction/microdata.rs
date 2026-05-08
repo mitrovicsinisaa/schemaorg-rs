@@ -42,7 +42,7 @@ const MAX_DEPTH: usize = 20;
 ///
 /// let html = r#"<html><body>
 /// <div itemscope itemtype="https://schema.org/Product">
-///   <span itemprop="name">Widget</span>
+/// <span itemprop="name">Widget</span>
 /// </div>
 /// </body></html>"#;
 ///
@@ -389,10 +389,6 @@ fn find_element_by_id<'a>(document: &'a Html, id: &str) -> Option<scraper::Eleme
         .filter_map(scraper::ElementRef::wrap)
         .find(|el| el.value().id() == Some(id))
 }
-
-/////////////////////////////////////////////////////////////////////////////
-// Unit tests
-/////////////////////////////////////////////////////////////////////////////
 
 #[cfg(test)]
 mod tests {

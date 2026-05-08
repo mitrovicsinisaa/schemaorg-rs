@@ -1,0 +1,28 @@
+{
+  "name": "@schemaorg-rs/wasm",
+  "version": "0.1.0",
+  "description": "Parse and validate Schema.org structured data (JSON-LD, Microdata, RDFa) — powered by Rust/WASM",
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "pkg/"
+  ],
+  "keywords": [
+    "schema-org",
+    "json-ld",
+    "structured-data",
+    "seo",
+    "validation",
+    "wasm",
+    "rich-results"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mitrovicsinisaa/schemaorg-rs"
+  },
+  "license": "MIT",
+  "author": "Sinisa Mitrovic"
+}

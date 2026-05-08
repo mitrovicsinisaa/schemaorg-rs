@@ -82,7 +82,7 @@ pub struct ExtractionOutput {
 ///
 /// let html = r#"<html><body>
 /// <div itemscope itemtype="https://schema.org/Product">
-///   <span itemprop="name">Widget</span>
+/// <span itemprop="name">Widget</span>
 /// </div>
 /// </body></html>"#;
 ///
@@ -100,10 +100,7 @@ pub trait Extractor: Send + Sync {
     fn extract(&self, html: &str) -> Result<ExtractionOutput, ExtractionError>;
 }
 
-/////////////////////////////////////////////////////////////////////////////
 // Shared helpers used by all three extractors
-/////////////////////////////////////////////////////////////////////////////
-
 /// Schema.org URL prefixes to strip from type names and property URIs.
 const SCHEMA_PREFIXES: &[&str] = &["https://schema.org/", "http://schema.org/", "schema:"];
 
@@ -118,7 +115,7 @@ const SCHEMA_PREFIXES: &[&str] = &["https://schema.org/", "http://schema.org/", 
 pub(crate) fn strip_schema_prefix(name: &str) -> Cow<'_, str> {
     for prefix in SCHEMA_PREFIXES {
         if let Some(stripped) = name.strip_prefix(prefix) {
-            return Cow::Owned(stripped.to_string());
+            return Cow::Borrowed(stripped);
         }
     }
     Cow::Borrowed(name)
@@ -184,13 +181,22 @@ mod common_tests {
     #[test]
     fn strip_schema_prefixes() {
         assert_eq!(strip_schema_prefix("Product").as_ref(), "Product");
-        assert_eq!(strip_schema_prefix("https://schema.org/Product").as_ref(), "Product");
-        assert_eq!(strip_schema_prefix("http://schema.org/Product").as_ref(), "Product");
+        assert_eq!(
+            strip_schema_prefix("https://schema.org/Product").as_ref(),
+            "Product"
+        );
+        assert_eq!(
+            strip_schema_prefix("http://schema.org/Product").as_ref(),
+            "Product"
+        );
         assert_eq!(strip_schema_prefix("schema:Product").as_ref(), "Product");
 
-        // No-prefix path returns Cow::Borrowed (no allocation)
+        // Both paths return Cow::Borrowed (zero allocation)
         assert!(matches!(strip_schema_prefix("Product"), Cow::Borrowed(_)));
-        assert!(matches!(strip_schema_prefix("https://schema.org/Product"), Cow::Owned(_)));
+        assert!(matches!(
+            strip_schema_prefix("https://schema.org/Product"),
+            Cow::Borrowed(_)
+        ));
     }
 
     #[test]

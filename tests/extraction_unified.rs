@@ -18,7 +18,6 @@ fn extract_first(extractor: &dyn Extractor, html: &str) -> schemaorg_rs::types::
 }
 
 // Simple Product: same data in all three formats
-
 const PRODUCT_JSONLD: &str = r#"<html><head>
 <script type="application/ld+json">{
   "@context": "https://schema.org",
@@ -91,9 +90,7 @@ fn cross_format_source_format_differs() {
     assert_eq!(rdfa.source_format, SourceFormat::RdfaLite);
 }
 
-
 // Nested Product with Offer
-
 const NESTED_JSONLD: &str = r#"<html><head>
 <script type="application/ld+json">{
   "@context": "https://schema.org",
@@ -152,9 +149,7 @@ fn cross_format_nested_types() {
     }
 }
 
-
 // Event with DateTime
-
 const EVENT_JSONLD: &str = r#"<html><head>
 <script type="application/ld+json">{
   "@context": "https://schema.org",
@@ -187,9 +182,7 @@ fn cross_format_event_name() {
     assert_eq!(rdfa.properties["name"], expected);
 }
 
-
 // extract_all with multiple formats in one document
-
 #[test]
 fn extract_all_combined_document() {
     let html = r#"<html><head>
@@ -228,9 +221,7 @@ fn extract_all_no_structured_data() {
     assert!(graph.nodes.is_empty());
 }
 
-
 // Malformed and edge-case inputs
-
 #[test]
 fn malformed_html_still_extracts() {
     // Unclosed tags, missing attributes - html5ever handles this

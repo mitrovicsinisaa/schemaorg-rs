@@ -54,9 +54,9 @@ const MAX_REF_RESOLUTIONS: usize = 50;
 ///
 /// let html = r#"<html><head>
 /// <script type="application/ld+json">{
-///   "@context": "https://schema.org",
-///   "@type": "Product",
-///   "name": "Widget"
+/// "@context": "https://schema.org",
+/// "@type": "Product",
+/// "name": "Widget"
 /// }</script>
 /// </head></html>"#;
 ///
@@ -177,10 +177,7 @@ impl JsonLdExtractor {
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////
 // JSON -> SchemaNode conversion
-/////////////////////////////////////////////////////////////////////////////
-
 /// Extracts top-level Schema.org items from a parsed JSON value.
 fn extract_json_items(
     value: &Value,
@@ -328,10 +325,7 @@ fn json_to_schema_values(
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////
 // @id cross-reference resolution
-/////////////////////////////////////////////////////////////////////////////
-
 /// Resolves `{"@id": "..."}` references throughout the node tree.
 ///
 /// Total resolutions are capped at [`MAX_REF_RESOLUTIONS`] to prevent
@@ -411,10 +405,7 @@ fn resolve_node_refs(
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////
 // Lazy @id reference collection
-/////////////////////////////////////////////////////////////////////////////
-
 /// Collects all `@id` values that appear as references (not definitions) in the node tree.
 ///
 /// A reference is a `SchemaValue::Node` with no types and only an `@id` property.
@@ -452,10 +443,7 @@ fn collect_refs_in_node(node: &SchemaNode, refs: &mut HashSet<String>, depth: us
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////
 // Source-location utilities
-/////////////////////////////////////////////////////////////////////////////
-
 /// Maps byte offsets to line/column positions.
 struct LineIndex {
     line_starts: Vec<usize>,
@@ -504,10 +492,6 @@ fn find_script_byte_offsets(html: &str) -> Vec<usize> {
 
     offsets
 }
-
-/////////////////////////////////////////////////////////////////////////////
-// Unit tests
-/////////////////////////////////////////////////////////////////////////////
 
 #[cfg(test)]
 mod tests {

@@ -78,9 +78,9 @@ pub enum ExtractionError {
 /// use schemaorg_rs::error::{ExtractionWarning, WarningCode};
 ///
 /// let warning = ExtractionWarning {
-///     message: "JSON-LD object has no @type".into(),
-///     source_location: None,
-///     code: WarningCode::EmptyType,
+/// message: "JSON-LD object has no @type".into(),
+/// source_location: None,
+/// code: WarningCode::EmptyType,
 /// };
 ///
 /// assert_eq!(warning.code, WarningCode::EmptyType);

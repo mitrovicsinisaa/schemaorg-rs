@@ -23,13 +23,14 @@ exclude = [
 
 [lib]
 name = "schemaorg_rs"
+crate-type = ["cdylib", "rlib"]
 
 [features]
 default = ["extraction"]
 extraction = ["dep:scraper", "dep:ego-tree", "dep:serde_json"]
 validation = ["extraction"]
 profiles = ["validation"]
-wasm = ["dep:wasm-bindgen"]
+wasm = ["profiles", "dep:wasm-bindgen", "dep:serde_json", "dep:getrandom", "dep:getrandom_02"]
 cli = ["profiles", "dep:clap"]
 full = ["extraction", "validation", "profiles"]
 
@@ -49,12 +50,26 @@ indexmap = { version = "2", features = ["serde"] }
 
 # WASM support (optional)
 wasm-bindgen = { version = "0.2", optional = true }
+getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"], optional = true }
+getrandom = { version = "0.3", features = ["wasm_js"], optional = true }
 
 # CLI (optional)
 clap = { version = "4", features = ["derive"], optional = true }
 
+[build-dependencies]
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+
 [dev-dependencies]
 pretty_assertions = "1"
+wasm-bindgen-test = "0.3"
+
+[profile.release]
+opt-level = 'z'     # optimize for size
+lto = true           # link-time optimization
+codegen-units = 1    # single codegen unit for better optimization
+strip = true         # strip debug symbols
+panic = 'abort'      # smaller binary, no unwinding
 
 [package.metadata.docs.rs]
 all-features = true

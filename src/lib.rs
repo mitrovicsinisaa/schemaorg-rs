@@ -48,6 +48,20 @@ pub mod extraction;
 #[cfg(feature = "extraction")]
 pub mod graph;
 
+/* Vocabulary + validation engine (feature-gated) */
+#[cfg(feature = "validation")]
+pub mod validation;
+#[cfg(feature = "validation")]
+pub mod vocabulary;
+
+/* Rich Results profile engine (feature-gated) */
+#[cfg(feature = "profiles")]
+pub mod profiles;
+
+/* WASM bindings (feature-gated) */
+#[cfg(feature = "wasm")]
+pub mod wasm;
+
 /* Public re-exports: always available */
 pub use error::{ExtractionError, ExtractionWarning, WarningCode};
 pub use types::{SchemaNode, SchemaValue, SourceFormat, SourceLocation};
@@ -61,3 +75,11 @@ pub use extraction::{
 pub use graph::{extract_all, StructuredDataGraph};
 #[cfg(feature = "extraction")]
 pub use scraper::Html;
+
+/* Public re-exports: validation feature */
+#[cfg(feature = "validation")]
+pub use validation::{DiagnosticCode, Severity, ValidationDiagnostic, ValidationResult};
+
+/* Public re-exports: profiles feature */
+#[cfg(feature = "profiles")]
+pub use profiles::{Eligibility, Profile, ProfileError, ProfileRegistry, ProfileResult};

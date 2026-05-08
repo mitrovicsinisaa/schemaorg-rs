@@ -82,9 +82,9 @@ pub struct StructuredDataGraph {
 ///
 /// let html = r#"<html><head>
 /// <script type="application/ld+json">{
-///   "@context": "https://schema.org",
-///   "@type": "Product",
-///   "name": "Widget"
+/// "@context": "https://schema.org",
+/// "@type": "Product",
+/// "name": "Widget"
 /// }</script>
 /// </head></html>"#;
 ///

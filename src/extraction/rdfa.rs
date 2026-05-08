@@ -48,7 +48,7 @@ const MAX_DEPTH: usize = 20;
 ///
 /// let html = r#"<html><body>
 /// <div vocab="https://schema.org/" typeof="Product">
-///   <span property="name">Widget</span>
+/// <span property="name">Widget</span>
 /// </div>
 /// </body></html>"#;
 ///
@@ -418,10 +418,6 @@ fn ensure_trailing_slash(uri: &str) -> String {
         format!("{uri}/")
     }
 }
-
-/////////////////////////////////////////////////////////////////////////////
-// Unit tests
-/////////////////////////////////////////////////////////////////////////////
 
 #[cfg(test)]
 mod tests {
